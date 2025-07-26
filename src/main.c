@@ -160,6 +160,10 @@ int main(void)
             --interpolation_delay;
         interpolate_facestate(&face, &target, interpolation_delay);
 
+        if (IsKeyPressed(KEY_F))
+            ToggleFullscreen();
+
+        // Update joaf
         if (next_movement > 0)
         {
             --next_movement;
