@@ -91,8 +91,11 @@ static void draw_face(struct resources *res, const struct facestate *face)
         float mouth_h = mouth_avail_h / GOLDEN_RAD;
         float mouth_w = mouth_h * (float)res->mouth.width / (float)res->mouth.height;
 
+        // Mouth center position (for now, the center of the yes)
+        float mouth_center_x = (pos_x[0] + pos_x[1]) / 2.0f;
+
         Rectangle src = {0, 0, res->mouth.width, res->mouth.height};
-        Rectangle dst = {0.5*(mouth_avail_w - mouth_w), available_h + 0.5*(mouth_avail_h - mouth_h), mouth_w, mouth_h};
+        Rectangle dst = {mouth_center_x - 0.5*mouth_w, available_h + 0.5*(mouth_avail_h - mouth_h), mouth_w, mouth_h};
 
         DrawTexturePro(res->mouth, src, dst, (Vector2){0, 0}, 0, EYE_COLOR);
     }
