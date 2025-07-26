@@ -5,6 +5,26 @@
 static Color EYE_COLOR = {255, 255, 222, 255};
 static const float EYE_SPREAD = 0.55f;
 
+struct resources
+{
+    Texture2D mouth;
+};
+
+static struct resources *load_resources()
+{
+    struct resources *res = MemAlloc(sizeof(*res));
+
+    res->mouth = LoadTexture("res/mouth.png");
+
+    return res;
+};
+
+static void cleanup_resources(struct resources *res)
+{
+    UnloadTexture(res->mouth);
+    MemFree(res);
+}
+
 struct facestate
 {
     struct eyestate
@@ -23,7 +43,7 @@ struct facestate INITIAL_FACE_STATE = {
     },
 };
 
-void draw_face(const struct facestate *face)
+static void draw_face(struct resources *res, const struct facestate *face)
 {
     // Height (minus limit for mouth)
     float available_h = 0.8f * GetRenderHeight();
@@ -44,11 +64,13 @@ void draw_face(const struct facestate *face)
         pos_y[i] = 0.5f * eye_h + (available_h - eye_h) * face->eyes[i].y;
     }
 
+    // Draw eyes
     for (int i = 0; i < 2; ++i)
     {
         DrawEllipse(pos_x[i], pos_y[i], 0.5f * eye_w, 0.5f * eye_h, EYE_COLOR);
     }
 
+    // Draw eyes's black center
     for (int i = 0; i < 2; ++i)
     {
         const struct eyestate *eye = &face->eyes[i];
@@ -61,9 +83,22 @@ void draw_face(const struct facestate *face)
             DrawEllipse(pos_x[i], pos_y[i], 0.5f * eye_w - thick, 0.5f * eye_h - thick, BLACK);
         }
     }
+
+    // Draw Mouth
+    {
+        float mouth_avail_w = GetRenderWidth();
+        float mouth_avail_h = GetRenderHeight() - available_h;
+        float mouth_h = mouth_avail_h / GOLDEN_RAD;
+        float mouth_w = mouth_h * (float)res->mouth.width / (float)res->mouth.height;
+
+        Rectangle src = {0, 0, res->mouth.width, res->mouth.height};
+        Rectangle dst = {0.5*(mouth_avail_w - mouth_w), available_h + 0.5*(mouth_avail_h - mouth_h), mouth_w, mouth_h};
+
+        DrawTexturePro(res->mouth, src, dst, (Vector2){0, 0}, 0, EYE_COLOR);
+    }
 }
 
-void interpolate_facestate(struct facestate *face, const struct facestate *target, float remain)
+static void interpolate_facestate(struct facestate *face, const struct facestate *target, float remain)
 {
     float alpha = 1.0f / (1.0f + remain);
 
@@ -75,7 +110,7 @@ void interpolate_facestate(struct facestate *face, const struct facestate *targe
     }
 }
 
-void set_random_facestate(struct facestate *face)
+static void set_random_facestate(struct facestate *face)
 {
     float eye_pos_x = GetRandomValue(0, 1024)/1024.0f * (1.0f - EYE_SPREAD);
     float eye_pos_y = GetRandomValue(0, 1024)/1024.0f;
@@ -108,7 +143,9 @@ int main(void)
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "JOAF");
-    SetTargetFPS(60);
+    SetTargetFPS(120);
+
+    struct resources *res = load_resources();
 
     int frame = 0;
     int interpolation_delay = 0;
@@ -127,18 +164,20 @@ int main(void)
         else
         {
             set_random_facestate(&target);
-            interpolation_delay = 3;
-            next_movement = GetRandomValue(30, 60);
+            interpolation_delay = 6;
+            next_movement = GetRandomValue(60, 180);
         }
 
         BeginDrawing();
             ClearBackground(BLACK);
 
-            draw_face(&face);
+            draw_face(res, &face);
         EndDrawing();
 
         ++frame;
     }
+
+    cleanup_resources(res);
 
     CloseWindow();
 
