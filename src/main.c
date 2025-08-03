@@ -157,6 +157,7 @@ int main(void)
 
     // Start in fullscreen
     ToggleFullscreen();
+    HideCursor();
 
     while (!WindowShouldClose())
     {
