@@ -147,12 +147,16 @@ int main(void)
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "JOAF");
     SetTargetFPS(120);
+    ChangeDirectory(GetApplicationDirectory());
 
     struct resources *res = load_resources();
 
     int frame = 0;
     int interpolation_delay = 0;
     int next_movement = GetRandomValue(10, 30);
+
+    // Start in fullscreen
+    ToggleFullscreen();
 
     while (!WindowShouldClose())
     {
